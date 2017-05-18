@@ -10,8 +10,8 @@ Benchmark tree structure for Django
 Для работы с рекурсивными структурами в Django будут использованы следующие инстументы
 
 1. Штатная рекурсия Django на основе ForeignKey
-2. Модуль django-mptt
-3. Модуль для реализации Ltree
+2. Модуль [django-mptt](https://github.com/django-mptt/django-mptt)
+3. Модуль для реализации [Ltree](https://github.com/yyjinlong/ltreefield)
 
 ### Методика тестирования
 
