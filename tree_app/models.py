@@ -16,7 +16,7 @@ class Raw(models.Model):
          related_name='children',
          db_index=True
     )
-    type = models.CharField(max_length=20, unique=True)
+    type = models.CharField(max_length=20)
 
 
 class Mptt(MPTTModel):
@@ -31,10 +31,10 @@ class Mptt(MPTTModel):
         related_name='children',
         db_index=True
     )
-    type = models.CharField(max_length=20, unique=True)
+    type = models.CharField(max_length=20)
 
     class MPTTMeta:
-        order_insertion_by = ['name']
+        order_insertion_by = ['id']
 
 
 class Ltree(models.Model):
@@ -42,4 +42,4 @@ class Ltree(models.Model):
     Модель для теста ltree.
     """
     path = LtreeField(max_length=1000)
-    type = models.CharField(max_length=20, unique=True)
+    type = models.CharField(max_length=20)

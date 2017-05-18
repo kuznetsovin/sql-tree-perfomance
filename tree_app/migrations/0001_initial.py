@@ -22,14 +22,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('path', tree_app.ltreefield.LtreeField()),
-                ('type', models.CharField(unique=True, max_length=20)),
+                ('type', models.CharField(max_length=20)),
             ],
         ),
         migrations.CreateModel(
             name='Mptt',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('type', models.CharField(unique=True, max_length=20)),
+                ('type', models.CharField(max_length=20)),
                 ('lft', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('rght', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('tree_id', models.PositiveIntegerField(editable=False, db_index=True)),
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
             name='Raw',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('type', models.CharField(unique=True, max_length=20)),
+                ('type', models.CharField(max_length=20)),
                 ('parent', models.ForeignKey(related_name='children', blank=True, to='tree_app.Raw', null=True)),
             ],
         ),
