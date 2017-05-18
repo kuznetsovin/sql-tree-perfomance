@@ -14,7 +14,7 @@ def get_avg_time_full_tree(model, count_iter=50):
     return result
 
 
-def get_avg_time_sub_tree(model, count_iter=50):
+def get_avg_time_sub_tree(model, node):
     result = 0
     return result
 

@@ -18,6 +18,9 @@ class Raw(models.Model):
     )
     type = models.CharField(max_length=20)
 
+    def get_subtree(self, node):
+        pass
+
 
 class Mptt(MPTTModel):
     """
@@ -33,6 +36,9 @@ class Mptt(MPTTModel):
     )
     type = models.CharField(max_length=20)
 
+    def get_subtree(self, node):
+        pass
+
     class MPTTMeta:
         order_insertion_by = ['id']
 
@@ -43,3 +49,7 @@ class Ltree(models.Model):
     """
     path = LtreeField(max_length=1000)
     type = models.CharField(max_length=20)
+
+    def get_subtree(self, node):
+        pass
+
