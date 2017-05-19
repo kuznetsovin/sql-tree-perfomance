@@ -14,7 +14,7 @@ def get_avg_time_full_tree(model, count_iter=50):
     reset_queries()
 
     # вычисляем среднее время выполнения
-    result = reduce(lambda x, y: x + y, times) / len(times)
+    result = sum(times) / len(times)
     return result
 
 
@@ -29,7 +29,7 @@ def get_avg_time_sub_tree(model, node_id, count_iter=50):
     times = [float(r["time"]) for r in connection.queries]
 
     # вычисляем среднее время выполнения
-    result = reduce(lambda x, y: x + y, times) / len(times)
+    result = sum(times) / len(times)
     return result
 
 
@@ -44,6 +44,16 @@ def get_avg_time_move_node(model, parent_node_id, moved_node_id):
     return result
 
 
-def get_avg_time_add_node(model):
-    result = 0
+def get_avg_time_add_node(model, parent_node_id):
+    target_node = model.objects.get(pk=parent_node_id)
+    reset_queries()
+
+    if model.__name__ == "Ltree":
+        new_node = model.objects.create(path=target_node.path, type="company")
+        new_node.path += ".{}".format(new_node.id)
+        new_node.save()
+    else:
+        model.objects.create(parent_id=parent_node_id, type="company")
+
+    result = sum([float(r["time"]) for r in connection.queries])
     return result

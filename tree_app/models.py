@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.db import models
+from django.db import models, connection
 from django.db.models import F
 from django.db.models import Func
 from django.db.models import Value
@@ -53,9 +53,6 @@ class Mptt(MPTTModel):
     )
     type = models.CharField(max_length=20)
 
-    class MPTTMeta:
-        order_insertion_by = ['id']
-
 
 class Ltree(models.Model):
     """
@@ -80,4 +77,6 @@ class Ltree(models.Model):
         sql = """UPDATE tree_app_ltree
                 SET path = text2ltree(replace(ltree2text(path), %(old_path)s, %(new_path)s))
                 WHERE path <@ %(old_path)s"""
-        Ltree.objects.raw(sql, params)
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, params)

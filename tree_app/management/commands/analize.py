@@ -11,19 +11,25 @@ class Command(BaseCommand):
     # Show this when the user types help
     help = "Tree statistics"
 
-    def add_arguments(self, parser):
-        parser.add_argument('result_file', type=str)
-
     def handle(self, *args, **options):
+        report_path = "./report"
+        if not os.path.exists(report_path):
+            os.makedirs(report_path)
+
+        # собираем статистику
+        summary_statistics_table = collect_statistics()
 
         # экспорт данных
         self.stdout.write("Exporting statistics table")
-        with open(options["result_file"], "wb") as csv_file:
+        data_file = os.path.join(report_path, "stat.csv")
+
+        with open(data_file, "wb") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=["avg_time", "type", "operation"])
             writer.writeheader()
             writer.writerows(summary_statistics_table)
 
         self.stdout.write("Export success!")
+
 
 def collect_statistics():
     summary_statistics_table = []
@@ -45,6 +51,7 @@ def collect_statistics():
                 "operation": operation
             }
         )
+
     # 2. Чтение произвольного узла
     print "Get read node statistics"
     operation = "read_subtree"
@@ -73,13 +80,14 @@ def collect_statistics():
             }
         )
 
-    # 5. Вставка узла
+    # 4. Вставка узла
     print "Get append node statistics"
-    operation = "add_tree"
+    target_node_id = 19893
+    operation = "add_node"
     for k, v in types.iteritems():
         summary_statistics_table.append(
             {
-                "avg_time": statistics.get_avg_time_add_node(v),
+                "avg_time": statistics.get_avg_time_add_node(v, target_node_id),
                 "type": k,
                 "operation": operation
             }
