@@ -37,10 +37,12 @@ class Command(BaseCommand):
         # 2. Чтение произвольного узла
         self.stdout.write("Get read node statistics")
         operation = "read_sub_tree"
+        # т.к. самый массивный из 12 уровней
+        node_id = 8
         for k,v in types.iteritems():
             summary_statistics_table.append(
                 {
-                    "avg_time": statistics.get_avg_time_sub_tree(v),
+                    "avg_time": statistics.get_avg_time_sub_tree(v, node_id),
                     "type": k,
                     "operation": operation
                 }

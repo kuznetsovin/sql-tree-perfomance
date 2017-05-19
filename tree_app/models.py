@@ -18,8 +18,18 @@ class Raw(models.Model):
     )
     type = models.CharField(max_length=20)
 
-    def get_subtree(self, node):
-        pass
+    def get_descendants(self, include_self=False):
+        sql = """WITH RECURSIVE t AS (
+          SELECT * FROM tree_app_raw WHERE id = %s
+          UNION
+          SELECT tree_app_raw.* FROM tree_app_raw JOIN t ON tree_app_raw.parent_id = t.id
+        )
+        SELECT * FROM t"""
+
+        if not include_self:
+            sql += " OFFSET 1"
+
+        return Raw.objects.raw(sql, [self.id])
 
 
 class Mptt(MPTTModel):
@@ -36,9 +46,6 @@ class Mptt(MPTTModel):
     )
     type = models.CharField(max_length=20)
 
-    def get_subtree(self, node):
-        pass
-
     class MPTTMeta:
         order_insertion_by = ['id']
 
@@ -50,6 +57,9 @@ class Ltree(models.Model):
     path = LtreeField(max_length=1000)
     type = models.CharField(max_length=20)
 
-    def get_subtree(self, node):
-        pass
+    def get_descendants(self, include_self=False):
+        result = Ltree.objects.filter(path__dore=self.path)
+        if not include_self:
+            result = result.exclude(id=self.id)
 
+        return result
