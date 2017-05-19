@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.db.models import F
+from django.db.models import Func
+from django.db.models import Value
 from mptt.models import MPTTModel, TreeForeignKey
 from ltreefield import LtreeField
 
@@ -10,11 +13,11 @@ class Raw(models.Model):
     Модель для теста рекурсивных запросов.
     """
     parent = models.ForeignKey(
-         'self',
-         null=True,
-         blank=True,
-         related_name='children',
-         db_index=True
+        'self',
+        null=True,
+        blank=True,
+        related_name='children',
+        db_index=True
     )
     type = models.CharField(max_length=20)
 
@@ -30,6 +33,10 @@ class Raw(models.Model):
             sql += " OFFSET 1"
 
         return Raw.objects.raw(sql, [self.id])
+
+    def move_to(self, target):
+        self.parent = target
+        self.save()
 
 
 class Mptt(MPTTModel):
@@ -63,3 +70,14 @@ class Ltree(models.Model):
             result = result.exclude(id=self.id)
 
         return result
+
+    def move_to(self, target):
+        params = {
+            "new_path": "{}.{}".format(target.path, self.id),
+            "old_path": self.path
+        }
+
+        sql = """UPDATE tree_app_ltree
+                SET path = text2ltree(replace(ltree2text(path), %(old_path)s, %(new_path)s))
+                WHERE path <@ %(old_path)s"""
+        Ltree.objects.raw(sql, params)

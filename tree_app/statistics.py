@@ -33,13 +33,14 @@ def get_avg_time_sub_tree(model, node_id, count_iter=50):
     return result
 
 
-def get_avg_time_move_footer_node_to_top(model):
-    result = 0
-    return result
+def get_avg_time_move_node(model, parent_node_id, moved_node_id):
+    parent_node = model.objects.get(id=parent_node_id)
+    moved_node = model.objects.get(id=moved_node_id)
+    reset_queries()
 
+    moved_node.move_to(parent_node)
 
-def get_avg_time_move_one_level_nodes(model):
-    result = 0
+    result = float(connection.queries[0]["time"])
     return result
 
 
