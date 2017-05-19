@@ -1,11 +1,15 @@
 # coding=utf-8
+import random
+
 from django.db import connection, reset_queries
 from django.conf import settings
 
 settings.DEBUG = True
 
+COUNT_ITER = 100
 
-def get_avg_time_full_tree(model, count_iter=50):
+
+def get_avg_time_full_tree(model, count_iter=COUNT_ITER):
     # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
     # он преобразуется в список
     for i in xrange(count_iter): list(model.objects.all());
@@ -13,47 +17,60 @@ def get_avg_time_full_tree(model, count_iter=50):
     times = [float(r["time"]) for r in connection.queries]
     reset_queries()
 
-    # вычисляем среднее время выполнения
     result = sum(times) / len(times)
     return result
 
 
-def get_avg_time_sub_tree(model, node_id, count_iter=50):
-    node = model.objects.get(id=node_id)
+def get_avg_time_sub_tree(model, count_iter=COUNT_ITER):
+    all_nodes = list(model.objects.all())
     reset_queries()
 
-    # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
-    # он преобразуется в список
-    for i in xrange(count_iter): list(node.get_descendants());
+    for i in xrange(count_iter):
+        node = random.choice(all_nodes)
+        # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
+        # он преобразуется в список
+        list(node.get_descendants())
 
     times = [float(r["time"]) for r in connection.queries]
 
-    # вычисляем среднее время выполнения
     result = sum(times) / len(times)
     return result
 
 
-def get_avg_time_move_node(model, parent_node_id, moved_node_id):
-    parent_node = model.objects.get(id=parent_node_id)
-    moved_node = model.objects.get(id=moved_node_id)
+def get_avg_time_move_node(model, count_iter=COUNT_ITER):
+    all_nodes = list(model.objects.all())
     reset_queries()
 
-    moved_node.move_to(parent_node)
+    for i in xrange(count_iter):
+        parent_node = random.choice(all_nodes)
+        moved_node = random.choice(all_nodes)
 
-    result = float(connection.queries[0]["time"])
+        moved_node.move_to(parent_node)
+
+    times = [float(r["time"]) for r in connection.queries]
+    result = sum(times) / len(times)
     return result
 
 
-def get_avg_time_add_node(model, parent_node_id):
-    target_node = model.objects.get(pk=parent_node_id)
+def get_avg_time_add_node(model, count_iter=COUNT_ITER):
+    all_nodes = list(model.objects.all())
     reset_queries()
+    times = []
 
     if model.__name__ == "Ltree":
-        new_node = model.objects.create(path=target_node.path, type="company")
-        new_node.path += ".{}".format(new_node.id)
-        new_node.save()
-    else:
-        model.objects.create(parent_id=parent_node_id, type="company")
+        for i in xrange(count_iter):
+            target_node = random.choice(all_nodes)
 
-    result = sum([float(r["time"]) for r in connection.queries])
+            new_node = model.objects.create(path=target_node.path, type="company")
+            new_node.path += ".{}".format(new_node.id)
+            new_node.save()
+            times.append(sum([float(r["time"]) for r in connection.queries]))
+            reset_queries()
+    else:
+        for i in xrange(count_iter):
+            target_node = random.choice(all_nodes)
+            model.objects.create(parent=target_node, type="company")
+        times = [float(r["time"]) for r in connection.queries]
+
+    result = sum(times) / len(times)
     return result

@@ -20,14 +20,9 @@ class Command(BaseCommand):
         summary_statistics_table = collect_statistics()
 
         # экспорт данных
-        self.stdout.write("Exporting statistics table")
         data_file = os.path.join(report_path, "stat.csv")
-
-        with open(data_file, "wb") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=["avg_time", "type", "operation"])
-            writer.writeheader()
-            writer.writerows(summary_statistics_table)
-
+        self.stdout.write("Exporting statistics table")
+        export_csv(data_file, summary_statistics_table)
         self.stdout.write("Export success!")
 
 
@@ -40,57 +35,35 @@ def collect_statistics():
         "mptt": Mptt
     }
 
-    # 1. чтение всего дерева
-    print "Get read tree statistics"
-    operation = "read_tree"
     for k, v in types.iteritems():
-        summary_statistics_table.append(
+        print "Getting {} operations statistics".format(k)
+        summary_statistics_table += [
             {
                 "avg_time": statistics.get_avg_time_full_tree(v),
                 "type": k,
-                "operation": operation
-            }
-        )
-
-    # 2. Чтение произвольного узла
-    print "Get read node statistics"
-    operation = "read_subtree"
-    # т.к. самый массивный из 12 уровней
-    node_id = 8
-    for k, v in types.iteritems():
-        summary_statistics_table.append(
+                "operation": "read_tree"
+            },
             {
-                "avg_time": statistics.get_avg_time_sub_tree(v, node_id),
+                "avg_time": statistics.get_avg_time_sub_tree(v),
                 "type": k,
-                "operation": operation
-            }
-        )
-
-    # 3. Перемещение поддерева
-    print "Get move footer node to top statistics"
-    operation = "move_subtree"
-    target_node_id = 2
-    moved_node_id = 29654
-    for k, v in types.iteritems():
-        summary_statistics_table.append(
+                "operation": "read_node"
+            },
             {
-                "avg_time": statistics.get_avg_time_move_node(v, target_node_id, moved_node_id),
+                "avg_time": statistics.get_avg_time_add_node(v),
                 "type": k,
-                "operation": operation
-            }
-        )
-
-    # 4. Вставка узла
-    print "Get append node statistics"
-    target_node_id = 19893
-    operation = "add_node"
-    for k, v in types.iteritems():
-        summary_statistics_table.append(
+                "operation": "add_node"
+            },
             {
-                "avg_time": statistics.get_avg_time_add_node(v, target_node_id),
+                "avg_time": statistics.get_avg_time_move_node(v),
                 "type": k,
-                "operation": operation
+                "operation": "move_node"
             }
-        )
-
+        ]
     return summary_statistics_table
+
+
+def export_csv(data_file, data):
+    with open(data_file, "wb") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=["avg_time", "type", "operation"])
+        writer.writeheader()
+        writer.writerows(data)
