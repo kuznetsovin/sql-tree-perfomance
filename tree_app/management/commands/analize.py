@@ -3,7 +3,6 @@
 from django.core.management import BaseCommand
 from tree_app.statistics import collect_statistics, MODEL_FIELD, \
     OPERATION_FIELD, TIME_FIELD
-from pandas import DataFrame
 
 
 class Command(BaseCommand):
@@ -16,20 +15,19 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # собираем статистику
         iter_count = options["iter_count"]
-        df = DataFrame(
-            data=collect_statistics(iter_count)
-        )
+        statistics = collect_statistics(iter_count)
 
         self.stdout.write("Export raw data")
-        filename = "report/raw_query_times_{}.csv".format(iter_count)
-        df.to_csv(filename, index=False)
+        statistics.to_csv(
+            "report/raw_query_times_{}.csv".format(iter_count),
+            index=False
+        )
 
         self.stdout.write("Pivot table creating")
-        pivot_stat = df.pivot_table(
+        statistics.pivot_table(
             values=TIME_FIELD,
             index=MODEL_FIELD,
             columns=OPERATION_FIELD
+        ).to_csv(
+            "report/pivot_stat_{}.csv".format(iter_count)
         )
-
-        filename = "report/pivot_stat_{}.csv".format(iter_count)
-        pivot_stat.to_csv(filename)

@@ -3,6 +3,8 @@ import random
 
 from django.db import connection, reset_queries
 from django.conf import settings
+from pandas import DataFrame
+
 from tree_app.models import Raw, Mptt, Ltree
 
 settings.DEBUG = True
@@ -108,4 +110,7 @@ def collect_statistics(iter_count):
                 insert_node_time(m)
             ]
 
-    return summary_statistics_table
+    result = DataFrame(
+        data=summary_statistics_table
+    )
+    return result
