@@ -3,74 +3,109 @@ import random
 
 from django.db import connection, reset_queries
 from django.conf import settings
+from tree_app.models import Raw, Mptt, Ltree
 
 settings.DEBUG = True
 
-COUNT_ITER = 100
+MODEL_FIELD = "model"
+OPERATION_FIELD = "operation"
+TIME_FIELD = "time"
 
 
-def get_avg_time_full_tree(model, count_iter=COUNT_ITER):
+def read_tree_time(model):
     # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
     # он преобразуется в список
-    for i in xrange(count_iter): list(model.objects.all());
+    list(model.objects.all())
 
-    times = [float(r["time"]) for r in connection.queries]
+    result = {
+        MODEL_FIELD: model.__name__,
+        OPERATION_FIELD: "read_tree",
+        TIME_FIELD: float(connection.queries[0]["time"])
+    }
     reset_queries()
 
-    result = sum(times) / len(times)
     return result
 
 
-def get_avg_time_sub_tree(model, count_iter=COUNT_ITER):
+def read_node_time(model):
     all_nodes = list(model.objects.all())
     reset_queries()
 
-    for i in xrange(count_iter):
-        node = random.choice(all_nodes)
-        # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
-        # он преобразуется в список
-        list(node.get_descendants())
+    node = random.choice(all_nodes)
+    # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в
+    # базу он преобразуется в список
+    list(node.get_descendants(include_self=True))
 
-    times = [float(r["time"]) for r in connection.queries]
+    result = {
+        MODEL_FIELD: model.__name__,
+        OPERATION_FIELD: "read_node",
+        TIME_FIELD: float(connection.queries[0]["time"])
+    }
+    reset_queries()
 
-    result = sum(times) / len(times)
     return result
 
 
-def get_avg_time_move_node(model, count_iter=COUNT_ITER):
+def move_node_time(model):
     all_nodes = list(model.objects.all())
     reset_queries()
 
-    for i in xrange(count_iter):
-        parent_node = random.choice(all_nodes)
-        moved_node = random.choice(all_nodes)
+    parent_node = random.choice(all_nodes)
+    moved_node = random.choice(all_nodes)
 
-        moved_node.move_to(parent_node)
+    moved_node.move_to(parent_node)
 
-    times = [float(r["time"]) for r in connection.queries]
-    result = sum(times) / len(times)
+    result = {
+        MODEL_FIELD: model.__name__,
+        OPERATION_FIELD: "move_node",
+        TIME_FIELD: float(connection.queries[0]["time"])
+    }
+    reset_queries()
+
     return result
 
 
-def get_avg_time_add_node(model, count_iter=COUNT_ITER):
+def insert_node_time(model):
     all_nodes = list(model.objects.all())
     reset_queries()
-    times = []
 
     if model.__name__ == "Ltree":
-        for i in xrange(count_iter):
-            target_node = random.choice(all_nodes)
+        target_node = random.choice(all_nodes)
 
-            new_node = model.objects.create(path=target_node.path, type="company")
-            new_node.path += ".{}".format(new_node.id)
-            new_node.save()
-            times.append(sum([float(r["time"]) for r in connection.queries]))
-            reset_queries()
+        new_node = model.objects.create(path=target_node.path, type="company")
+        new_node.path += ".{}".format(new_node.id)
+        new_node.save()
+
+        time = sum([float(r["time"]) for r in connection.queries])
     else:
-        for i in xrange(count_iter):
-            target_node = random.choice(all_nodes)
-            model.objects.create(parent=target_node, type="company")
-        times = [float(r["time"]) for r in connection.queries]
+        target_node = random.choice(all_nodes)
+        model.objects.create(parent=target_node, type="company")
+        time = float(connection.queries[0]["time"])
 
-    result = sum(times) / len(times)
+    result = {
+        MODEL_FIELD: model.__name__,
+        OPERATION_FIELD: "insert_node",
+        TIME_FIELD: time
+    }
+    reset_queries()
+
     return result
+
+
+def collect_statistics(iter_count):
+    summary_statistics_table = []
+
+    models = [Ltree, Raw, Mptt]
+
+    for m in models:
+        print "Read time for {} model".format(m.__name__)
+        for i in xrange(iter_count):
+            print "Iteration: {}".format(i)
+            summary_statistics_table += [
+                read_tree_time(m),
+                read_node_time(m),
+                move_node_time(m),
+                insert_node_time(m)
+            ]
+
+    return summary_statistics_table
