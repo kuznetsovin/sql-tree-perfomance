@@ -15,12 +15,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # собираем статистику
+        iter_count = options["iter_count"]
         df = DataFrame(
-            data=collect_statistics(options["iter_count"])
+            data=collect_statistics(iter_count)
         )
 
         self.stdout.write("Export raw data")
-        df.to_csv("report/raw_query_times.csv", index=False)
+        filename = "report/raw_query_times_{}.csv".format(iter_count)
+        df.to_csv(filename, index=False)
 
         self.stdout.write("Pivot table creating")
         pivot_stat = df.pivot_table(
@@ -29,4 +31,5 @@ class Command(BaseCommand):
             columns=OPERATION_FIELD
         )
 
-        pivot_stat.to_csv("report/pivot_stat.csv")
+        filename = "report/pivot_stat_{}.csv".format(iter_count)
+        pivot_stat.to_csv(filename)
