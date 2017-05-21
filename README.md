@@ -72,7 +72,7 @@ python manage.py load_tree analize <кол-во запросов для анал
 
 ##### Чтение всего дерева
 
-![png]("./report/read_tree_chart.png")
+![png](./report/read_tree_chart.png)
 
 ##### Чтение произвольного узла
 
