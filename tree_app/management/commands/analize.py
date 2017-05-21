@@ -24,10 +24,28 @@ class Command(BaseCommand):
         )
 
         self.stdout.write("Pivot table creating")
-        statistics.pivot_table(
+        pivot_stat = statistics.pivot_table(
             values=TIME_FIELD,
             index=MODEL_FIELD,
             columns=OPERATION_FIELD
-        ).to_csv(
+        )
+        pivot_stat.to_csv(
             "report/pivot_stat_{}.csv".format(iter_count)
         )
+
+        charts = {
+            "insert_node": u"Insert node (ms)",
+            "move_node": u"Move node (ms)",
+            "read_node": u"Read node (ms)",
+            "read_tree": u"Read tree (ms)",
+        }
+        for k,v in charts.iteritems():
+            insert_node_chart = pivot_stat[k].plot.barh(
+                title=v,
+                color=['b', 'g', 'r']
+            )
+            fig = insert_node_chart.get_figure()
+            fig.savefig(
+                "report/{}_chart.png".format(k)
+            )
+            self.stdout.write("Save {} chart is success".format(k))
