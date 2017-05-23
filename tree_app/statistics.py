@@ -17,7 +17,12 @@ TIME_FIELD = "time"
 def read_tree_time(model):
     # т.к. используется "ленивая" модель запросов, то чтобы запрос отправиля в базу
     # он преобразуется в список
-    list(model.objects.all())
+    if model.__name__ == "Raw":
+        list(model.objects.all().order_by("parent_id"))
+    elif model.__name__ == "Ltree":
+        list(model.objects.all().order_by("path"))
+    else:
+        list(model.objects.all())
 
     result = {
         MODEL_FIELD: model.__name__,
